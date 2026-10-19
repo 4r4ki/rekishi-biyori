@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>れきし日和</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="日本史の問題が毎日2問。解説と「つながる知識」で、関連することも自然に覚えられます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@600;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* 紙と墨と藍。年表の帯（時代ごとの色）を、問題・ずかん・記録で共通の目印に使う */
+:root {
+  --paper: #EDEFEA;     /* 少し青みのある和紙 */
+  --sheet: #FAFBF8;     /* 問題カードの面 */
+  --ink: #1D2230;       /* 墨 */
+  --ink-2: #565D6E;
+  --line: #D5D9D1;
+  --ai: #2B4590;        /* 藍：操作できるもの */
+  --ai-soft: #DFE5F3;
+  --ok: #2C7A62;        /* 緑青：正解 */
+  --ok-soft: #DCEFE6;
+  --ng: #A53D2B;        /* 弁柄：不正解 */
+  --ng-soft: #F5E1DB;
+  --gold: #9A7420;
+  --era-s: 42%; --era-l: 46%;
+  --f-display: 'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --f-body: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans JP', sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #13161D; --sheet: #1C2029; --ink: #E6E8EE; --ink-2: #A2A8B6; --line: #2F3542;
+    --ai: #94ABEF; --ai-soft: #252F4A; --ok: #6FCBA8; --ok-soft: #173329; --ng: #F08F7A; --ng-soft: #3A211C;
+    --gold: #D9B25C; --era-s: 40%; --era-l: 62%; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #13161D; --sheet: #1C2029; --ink: #E6E8EE; --ink-2: #A2A8B6; --line: #2F3542;
+  --ai: #94ABEF; --ai-soft: #252F4A; --ok: #6FCBA8; --ok-soft: #173329; --ng: #F08F7A; --ng-soft: #3A211C;
+  --gold: #D9B25C; --era-s: 40%; --era-l: 62%; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--paper); color: var(--ink);
+  font: 16px/1.75 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ai); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 900; text-wrap: balance; margin: 0; line-height: 1.35; }
+.era-c { --h: 0; color: hsl(var(--h) var(--era-s) var(--era-l)); }
+
+/* ヘッダー */
+header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 18px 6px; }
+.brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.brand h1 { font-size: 26px; letter-spacing: .06em; }
+.brand .date { color: var(--ink-2); font-size: 14px; white-space: nowrap; }
+.streak { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--sheet); border: 1px solid var(--line); font-size: 13px; white-space: nowrap; }
+.streak b { font-family: var(--f-display); font-size: 18px; color: var(--gold); font-variant-numeric: tabular-nums; }
+
+/* 年表の帯 */
+.ribbon { display: grid; grid-template-columns: repeat(16, 1fr); gap: 2px; height: 10px; margin-top: 6px; }
+.ribbon span { --h: 0; background: hsl(var(--h) var(--era-s) var(--era-l)); border-radius: 2px; opacity: .28; position: relative; }
+.ribbon span.on { opacity: 1; }
+.ribbon span.here::after { content: ""; position: absolute; left: 50%; top: -9px; transform: translateX(-50%); border: 5px solid transparent; border-top-color: var(--ink); }
+.ribbon-cap { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-2); margin-top: 2px; }
+
+/* きょうは何の日 */
+.otd { display: flex; gap: 10px; align-items: baseline; width: 100%; text-align: left; margin-top: 10px; padding: 10px 14px; border: 1px dashed var(--line); border-radius: var(--r); background: transparent; cursor: pointer; }
+.otd small { font-family: var(--f-display); color: var(--gold); white-space: nowrap; font-size: 13px; }
+.otd span { font-size: 14px; min-width: 0; }
+.otd span b { font-variant-numeric: tabular-nums; }
+
+/* 日付と2問のタブ */
+.daynav { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; font-size: 14px; color: var(--ink-2); }
+.daynav button { background: none; border: 0; padding: 6px 8px; color: var(--ai); cursor: pointer; border-radius: 8px; }
+.daynav button:disabled { color: var(--line); cursor: default; }
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.tab { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 10px; border-radius: var(--r); border: 1px solid var(--line); background: transparent; cursor: pointer; text-align: left; }
+.tab .tl { display: flex; flex-direction: column; line-height: 1.35; min-width: 0; }
+.tab .tl b { white-space: nowrap; }
+.tab small { color: var(--ink-2); font-size: 11px; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--sheet); border-color: var(--ink); }
+.mark { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; border: 1.5px solid var(--line); color: var(--ink-2); flex: none; }
+.mark.ok { border-color: var(--ok); color: var(--ok); }
+.mark.ng { border-color: var(--ng); color: var(--ng); }
+
+/* 問題 */
+.qcard { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 20px 18px; margin-top: 12px; }
+.qmeta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 12px; color: var(--ink-2); letter-spacing: .08em; }
+.qmeta .lv { font-weight: 700; color: var(--ink); }
+.qtext { font-size: 18px; line-height: 1.8; margin: 10px 0 16px; }
+.choices { display: grid; gap: 10px; }
+.choice { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; text-align: left; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--paper); cursor: pointer; transition: border-color .15s, transform .1s; }
+.choice:hover:not(:disabled) { border-color: var(--ai); }
+.choice:active:not(:disabled) { transform: scale(.99); }
+.choice:disabled { cursor: default; }
+.choice .k { font-family: var(--f-display); font-size: 18px; color: var(--ai); line-height: 1.5; }
+.choice .t { min-width: 0; font-weight: 500; }
+.choice .note { display: block; font-size: 13px; color: var(--ink-2); font-weight: 400; margin-top: 4px; }
+.choice.ok { border-color: var(--ok); background: var(--ok-soft); }
+.choice.ok .k { color: var(--ok); }
+.choice.ng { border-color: var(--ng); background: var(--ng-soft); }
+.choice.ng .k { color: var(--ng); }
+.choice.dim { opacity: .82; }
+
+.result { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.verdict { display: flex; align-items: center; gap: 12px; }
+.verdict .stamp { font-family: var(--f-display); font-size: 30px; width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; border: 3px solid currentColor; transform: rotate(-8deg); flex: none; }
+.verdict.ok { color: var(--ok); } .verdict.ng { color: var(--ng); }
+.verdict h2 { font-size: 22px; }
+.verdict p { margin: 0; font-size: 13px; color: var(--ink-2); }
+@media (prefers-reduced-motion: no-preference) { .verdict .stamp { animation: stamp .35s ease-out; } }
+@keyframes stamp { from { transform: rotate(-8deg) scale(1.6); opacity: 0; } to { transform: rotate(-8deg) scale(1); opacity: 1; } }
+.explain { margin-top: 14px; }
+.explain p { margin: 0; }
+.where { margin-top: 16px; }
+.where .lab { font-size: 13px; margin-top: 6px; }
+.where .lab b { font-family: var(--f-display); }
+
+.links h3, .sec-h { font-size: 17px; margin: 22px 0 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.links h3 small, .sec-h small { font-family: var(--f-body); font-weight: 400; font-size: 12px; color: var(--ink-2); }
+.kcards { display: grid; gap: 8px; }
+.kcard { --h: 0; display: block; width: 100%; text-align: left; padding: 10px 14px 10px 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; position: relative; }
+.kcard::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 4px; border-radius: 0 3px 3px 0; background: hsl(var(--h) var(--era-s) var(--era-l)); }
+.kcard .h { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.kcard .h b { min-width: 0; }
+.kcard .h small { color: var(--ink-2); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.kcard .d { font-size: 13px; color: var(--ink-2); margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.kcard .new { font-size: 11px; color: var(--gold); font-weight: 700; margin-left: 6px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.btn { padding: 10px 16px; border-radius: 999px; border: 1px solid var(--ai); background: transparent; color: var(--ai); cursor: pointer; font-weight: 700; font-size: 14px; }
+.btn.fill { background: var(--ai); color: var(--sheet); }
+.toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 8px 16px; border-radius: 999px; font-size: 14px; z-index: 30; }
+
+/* ずかん */
+.era-sec { margin-top: 18px; }
+.era-sec .eh { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.era-sec .eh h3 { font-size: 18px; }
+.era-sec .eh small { color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; margin-top: 10px; }
+.tile { --h: 0; text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); cursor: pointer; min-height: 64px; display: flex; flex-direction: column; justify-content: space-between; gap: 4px; border-top: 3px solid hsl(var(--h) var(--era-s) var(--era-l)); }
+.tile b { font-size: 14px; line-height: 1.45; }
+.tile small { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tile.locked { background: transparent; border-style: dashed; border-top-style: solid; color: var(--ink-2); cursor: default; opacity: .6; }
+.lead { color: var(--ink-2); font-size: 14px; margin: 8px 0 0; }
+
+/* 記録 */
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 14px; }
+.stat { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.stat b { display: block; font-family: var(--f-display); font-size: 28px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.stat small { color: var(--ink-2); font-size: 12px; }
+.bars { display: grid; gap: 6px; margin-top: 4px; }
+.bar { display: grid; grid-template-columns: 7.5em 1fr 4.5em; gap: 10px; align-items: center; font-size: 13px; }
+.bar .track { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.bar .fill { --h: 0; height: 100%; background: hsl(var(--h) var(--era-s) var(--era-l)); }
+.bar .num { text-align: right; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.miss { display: grid; gap: 8px; }
+.miss button { text-align: left; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--sheet); cursor: pointer; font-size: 14px; }
+.miss button small { display: block; color: var(--ink-2); font-size: 12px; }
+.settings { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; font-size: 14px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; background: transparent; padding: 6px 14px; cursor: pointer; font-size: 13px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.danger { color: var(--ng); border-color: var(--ng); }
+.empty { color: var(--ink-2); font-size: 14px; padding: 12px 0; }
+
+/* 下のナビ */
+nav.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--sheet); border-top: 1px solid var(--line); padding: 6px max(16px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+nav.bottom .in { max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+nav.bottom button { border: 0; background: none; padding: 8px 4px; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 12px; color: var(--ink-2); }
+nav.bottom button .ic { font-family: var(--f-display); font-size: 20px; line-height: 1.1; }
+nav.bottom button[aria-current="page"] { color: var(--ai); background: var(--ai-soft); }
+
+/* カードのくわしい説明 */
+.overlay { position: fixed; inset: 0; z-index: 40; background: rgb(10 12 18 / .5); display: flex; align-items: flex-end; justify-content: center; padding: env(safe-area-inset-top, 0px) max(0px, env(safe-area-inset-right, 0px)) 0 max(0px, env(safe-area-inset-left, 0px)); }
+.sheet { background: var(--sheet); width: 100%; max-width: 640px; max-height: 88%; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 20px max(18px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) max(18px, env(safe-area-inset-left, 0px)); }
+.sheet .close { float: right; border: 0; background: var(--paper); border-radius: 999px; width: 36px; height: 36px; cursor: pointer; font-size: 18px; }
+.sheet .eraname { font-size: 13px; font-weight: 700; }
+.sheet h2 { font-size: 24px; margin-top: 4px; }
+.sheet .yl { color: var(--ink-2); font-size: 14px; margin-top: 2px; }
+.sheet .body { margin-top: 12px; }
+.sheet .who { font-size: 14px; margin-top: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { --h: 0; border: 1px solid hsl(var(--h) var(--era-s) var(--era-l)); background: transparent; border-radius: 999px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.chip.got::after { content: " ✓"; color: var(--ok); }
+@media (min-width: 700px) { .overlay { align-items: center; } .sheet { border-radius: 20px; max-height: 80%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>れきし日和</h1><span class="date" id="today-label"></span></div>
+    <div class="streak" title="連続で解いた日数">連続 <b id="streak">0</b> 日</div>
+  </header>
+  <main id="view"></main>
+</div>
+<nav class="bottom" aria-label="画面">
+  <div class="in">
+    <button data-go="today"><span class="ic">問</span>きょうの2問</button>
+    <button data-go="zukan"><span class="ic">鑑</span>ずかん</button>
+    <button data-go="record"><span class="ic">記</span>きろく</button>
+  </div>
+</nav>
+<div id="overlay-root"></div>
+
+<script src="cards.js"></script>
+<script src="questions.js"></script>
+<script src="core.js"></script>
+<script>
+'use strict';
+// ---------------------------------------------------------------------------
+// 記録（この端末のブラウザの中にだけ保存）
+//   days[日付].easy|hard = { id, pick, ok, late }  late: その日以外に解いた（連続日数に数えない）
+//   cards[カードid] = 初めて見た日付 / done[問題id] = 復習で正解した
+// ---------------------------------------------------------------------------
+const STORE = 'rekishi-biyori-v1';
+let db;
+try { db = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { db = {}; }
+db.days ||= {}; db.cards ||= {}; db.done ||= {};
+const save = () => { try { localStorage.setItem(STORE, JSON.stringify(db)); } catch (e) { /* 保存できなくても遊べる */ } };
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+const strip = s => s.replace(/<[^>]+>/g, '');
+const KANA = ['い', 'ろ', 'は', 'に'];
+const SLOT = { easy: 'やさしい', hard: 'むずかしい' };
+const eraIdx = id => ERA.get(id).i;
+const hue = id => ERA.get(id).hue;
+const fmtDay = d => `${d.getMonth() + 1}月${d.getDate()}日（${WEEK[d.getDay()]}）`;
+
+// 表示中の状態
+const T0 = today();
+let view = 'today', day = T0, slot = null, newCards = [];
+
+// その日の問題（一度さわった日は記録の問題IDを使うので、問題を追加しても入れかわらない）
+function qOf(d, s) {
+  const rec = db.days[keyOf(d)]?.[s];
+  return (rec && BY_ID.get(rec.id)) || questionFor(d, s);
+}
+function recOf(d, s) {
+  const rec = db.days[keyOf(d)]?.[s];
+  return rec && BY_ID.has(rec.id) ? rec : null;
+}
+
+function streak() {
+  // きょう解いていなければ、きのうまでの連続を数える
+  const solvedOn = d => { const r = db.days[keyOf(d)]; return r && ['easy', 'hard'].some(s => r[s] && !r[s].late); };
+  let d = solvedOn(T0) ? T0 : addDays(T0, -1), n = 0;
+  while (solvedOn(d)) { n++; d = addDays(d, -1); }
+  return n;
+}
+function bestStreak() {
+  const keys = Object.keys(db.days).filter(k => ['easy', 'hard'].some(s => db.days[k][s] && !db.days[k][s].late)).sort();
+  let best = 0, run = 0, prev = null;
+  for (const k of keys) {
+    const [y, m, dd] = k.split('-').map(Number);
+    const d = new Date(y, m - 1, dd);
+    run = prev && keyOf(addDays(prev, 1)) === k ? run + 1 : 1;
+    best = Math.max(best, run); prev = d;
+  }
+  return best;
+}
+
+// ---------------------------------------------------------------------------
+// 部品
+// ---------------------------------------------------------------------------
+function ribbon(activeIds, hereId) {
+  const on = new Set(activeIds);
+  return `<div class="ribbon" aria-hidden="true">${ERAS.map(e =>
+    `<span style="--h:${e.hue}" class="${on.has(e.id) ? 'on' : ''} ${e.id === hereId ? 'here' : ''}"></span>`).join('')}</div>`;
+}
+function kcard(id) {
+  const c = CARD.get(id);
+  const isNew = newCards.includes(id);
+  return `<button class="kcard" style="--h:${hue(c.e)}" data-card="${c.id}">
+    <span class="h"><b>${esc(c.t)}${isNew ? '<span class="new">NEW</span>' : ''}</b><small>${esc(c.yl)}・${esc(eraName(c.e))}</small></span>
+    <span class="d">${esc(c.d)}</span></button>`;
+}
+
+function questionHTML(q, rec, mode) {
+  const order = choiceOrder(q);
+  const answered = !!rec;
+  const choices = order.map((i, k) => {
+    let cls = '';
+    if (answered) cls = i === q.a ? 'ok' : i === rec.pick ? 'ng' : 'dim';
+    const note = answered && q.n && q.n[i] ? `<span class="note">${esc(q.n[i])}</span>` : '';
+    return `<button class="choice ${cls}" data-pick="${i}" ${answered ? 'disabled' : ''}><span class="k">${KANA[k]}</span><span class="t">${esc(q.c[i])}${note}</span></button>`;
+  }).join('');
+  const kind = q.kind || '一問一答';
+  let html = `<article class="qcard">
+    <div class="qmeta"><span class="lv">${SLOT[q.lv === 1 ? 'easy' : 'hard']}</span><span>${kind}</span>${answered ? `<span class="era-c" style="--h:${hue(q.e)}">● ${eraName(q.e)}</span>` : ''}</div>
+    <p class="qtext">${q.q}</p>
+    <div class="choices">${choices}</div>`;
+  if (answered) {
+    const ok = rec.pick === q.a;
+    const cards = cardsOf(q);
+    const eras = [...new Set(cards.map(id => CARD.get(id).e))];
+    html += `<section class="result" id="result">
+      <div class="verdict ${ok ? 'ok' : 'ng'}"><span class="stamp">${ok ? '正' : '惜'}</span>
+        <div><h2>${ok ? '正解！' : 'ざんねん！'}</h2><p>${ok ? 'つながる知識もあわせて読むと、記憶に残りやすくなります。' : `正解は「${esc(q.c[q.a])}」。解説を読めば、次はきっと大丈夫。`}</p></div></div>
+      <div class="explain"><p>${q.x}</p></div>
+      <div class="where">${ribbon(eras, q.e)}
+        <div class="lab era-c" style="--h:${hue(q.e)}"><b>${eraName(q.e)}</b>　${ERA.get(q.e).span}${ERA.get(q.e).note ? `（${ERA.get(q.e).note}）` : ''}</div></div>
+      <div class="links"><h3>つながる知識 <small>タップでくわしく。ずかんに記録されます</small></h3>
+        <div class="kcards">${cards.map(kcard).join('')}</div></div>
+      ${mode === 'today' ? `<div class="actions">${nextButton()}<button class="btn" data-act="share">結果をシェア</button></div>` : ''}
+    </section>`;
+  }
+  return html + '</article>';
+}
+function nextButton() {
+  const other = slot === 'easy' ? 'hard' : 'easy';
+  return recOf(day, other) ? '' : `<button class="btn fill" data-act="other">${SLOT[other]}問題へ</button>`;
+}
+
+// ---------------------------------------------------------------------------
+// 画面：きょうの2問
+// ---------------------------------------------------------------------------
+function renderToday() {
+  if (!slot) slot = recOf(day, 'easy') && !recOf(day, 'hard') ? 'hard' : 'easy';
+  const q = qOf(day, slot), rec = recOf(day, slot);
+  const mmdd = `${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
+  const otd = (ON_THIS_DAY[mmdd] || []).map(o =>
+    `<button class="otd" data-card="${o.c}"><small>きょうは何の日</small><span><b>${o.y}年</b>のきょう、${esc(o.s)}。</span></button>`).join('');
+  const back = dayNum(day) > dayNum(T0) - 7;
+  const tab = s => {
+    const r = recOf(day, s);
+    const m = r ? (r.pick === qOf(day, s).a ? '<span class="mark ok">○</span>' : '<span class="mark ng">×</span>') : '<span class="mark">・</span>';
+    return `<button class="tab" role="tab" data-slot="${s}" aria-selected="${s === slot}">${m}<span class="tl"><b>${SLOT[s]}</b><small>${s === 'easy' ? '基本をおさえる' : '一歩ふみこむ'}</small></span></button>`;
+  };
+  $('#view').innerHTML = `
+    ${otd}
+    <div class="daynav">
+      <button data-day="-1" ${back ? '' : 'disabled'} aria-label="前の日">‹ 前の日</button>
+      <span>${keyOf(day) === keyOf(T0) ? 'きょう' : fmtDay(day)}の2問</span>
+      <button data-day="1" ${keyOf(day) === keyOf(T0) ? 'disabled' : ''} aria-label="次の日">次の日 ›</button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="問題のむずかしさ">${tab('easy')}${tab('hard')}</div>
+    ${questionHTML(q, rec, 'today')}
+    ${keyOf(day) !== keyOf(T0) ? '<p class="lead">過去の日の問題は、解いても連続日数には数えません。</p>' : ''}`;
+}
+
+function answer(pick) {
+  const q = qOf(day, slot);
+  const k = keyOf(day);
+  db.days[k] ||= {};
+  if (db.days[k][slot]) return;
+  db.days[k][slot] = { id: q.id, pick, ok: pick === q.a, late: k !== keyOf(today()) };
+  newCards = cardsOf(q).filter(id => !db.cards[id]);
+  for (const id of newCards) db.cards[id] = keyOf(today());
+  save();
+  render();
+  document.getElementById('result')?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+}
+
+// ---------------------------------------------------------------------------
+// 画面：ずかん
+// ---------------------------------------------------------------------------
+function renderZukan() {
+  const got = Object.keys(db.cards).filter(id => CARD.has(id));
+  const gotEras = ERAS.filter(e => CARDS.some(c => c.e === e.id && db.cards[c.id])).map(e => e.id);
+  $('#view').innerHTML = `
+    <h2 class="sec-h" style="margin-top:16px">年表ずかん <small>${got.length} / ${CARDS.length} 枚</small></h2>
+    ${ribbon(gotEras)}
+    <div class="ribbon-cap"><span>旧石器</span><span>令和</span></div>
+    <p class="lead">問題を解くと、解説に出てきた知識がカードになって集まります。カードどうしもつながっているので、気になったらたどってみましょう。</p>
+    ${ERAS.map(e => {
+      const list = CARDS.filter(c => c.e === e.id).sort((a, b) => a.y - b.y);
+      const n = list.filter(c => db.cards[c.id]).length;
+      return `<section class="era-sec"><div class="eh"><h3 class="era-c" style="--h:${e.hue}">${e.name}</h3><small>${e.span}　${n} / ${list.length}</small></div>
+        <div class="grid">${list.map(c => db.cards[c.id]
+          ? `<button class="tile" style="--h:${e.hue}" data-card="${c.id}"><b>${esc(c.t)}</b><small>${esc(c.yl)}</small></button>`
+          : `<div class="tile locked" style="--h:${e.hue}"><b>？？？</b><small>${esc(c.yl)}</small></div>`).join('')}</div></section>`;
+    }).join('')}`;
+}
+
+// ---------------------------------------------------------------------------
+// 画面：きろく
+// ---------------------------------------------------------------------------
+function renderRecord() {
+  const recs = Object.entries(db.days).flatMap(([k, r]) => ['easy', 'hard'].filter(s => r[s] && BY_ID.has(r[s].id)).map(s => ({ k, s, ...r[s], q: BY_ID.get(r[s].id) })));
+  const okN = recs.filter(r => r.pick === r.q.a).length;
+  const byEra = ERAS.map(e => { const l = recs.filter(r => r.q.e === e.id); return { e, n: l.length, ok: l.filter(r => r.pick === r.q.a).length }; });
+  const misses = recs.filter(r => r.pick !== r.q.a && !db.done[r.q.id]).sort((a, b) => b.k.localeCompare(a.k));
+  const theme = getTheme();
+  $('#view').innerHTML = `
+    <div class="stats">
+      <div class="stat"><b>${streak()}</b><small>いまの連続日数</small></div>
+      <div class="stat"><b>${bestStreak()}</b><small>最長の連続日数</small></div>
+      <div class="stat"><b>${recs.length ? Math.round(okN / recs.length * 100) : 0}<span style="font-size:16px">%</span></b><small>正解率（${okN} / ${recs.length}問）</small></div>
+      <div class="stat"><b>${Object.keys(db.cards).filter(id => CARD.has(id)).length}</b><small>集めた知識カード</small></div>
+    </div>
+    <h2 class="sec-h">時代ごとの成績 <small>正解 / 解いた数</small></h2>
+    ${recs.length ? `<div class="bars">${byEra.filter(b => b.n).map(b => `<div class="bar"><span class="era-c" style="--h:${b.e.hue}">${b.e.name}</span><span class="track"><span class="fill" style="--h:${b.e.hue};width:${b.ok / b.n * 100}%;display:block"></span></span><span class="num">${b.ok} / ${b.n}</span></div>`).join('')}</div>` : '<p class="empty">まだ記録がありません。きょうの2問から始めましょう。</p>'}
+    <h2 class="sec-h">まちがえた問題 <small>もう一度解いて正解すると消えます</small></h2>
+    ${misses.length ? `<div class="miss">${misses.map(r => `<button data-review="${r.q.id}">${esc(strip(r.q.q))}<small>${r.k.slice(5).replace('-', '/')}・${SLOT[r.s]}・${eraName(r.q.e)}</small></button>`).join('')}</div>` : '<p class="empty">まちがえた問題はありません。</p>'}
+    <h2 class="sec-h">設定</h2>
+    <div class="settings">表示
+      <span class="seg">${[['auto', '自動'], ['light', 'ライト'], ['dark', 'ダーク']].map(([v, l]) => `<button data-theme-set="${v}" aria-pressed="${theme === v}">${l}</button>`).join('')}</span>
+    </div>
+    <div class="settings" id="reset-area"><button class="btn danger" data-act="reset">記録をすべて消す</button></div>
+    <p class="lead">記録は、この端末のブラウザの中にだけ保存されます。</p>`;
+}
+
+// ---------------------------------------------------------------------------
+// 重なって出る画面（カードのくわしい説明・復習）
+// ---------------------------------------------------------------------------
+let lastFocus = null;
+function openSheet(inner) {
+  if (!$('#overlay-root').innerHTML) lastFocus = document.activeElement;
+  $('#overlay-root').innerHTML = `<div class="overlay" data-close="1"><div class="sheet" role="dialog" aria-modal="true">
+    <button class="close" data-close="1" aria-label="閉じる">×</button>${inner}</div></div>`;
+  $('.sheet').scrollTop = 0;
+  $('.sheet .close').focus();
+}
+function closeSheet() { $('#overlay-root').innerHTML = ''; lastFocus?.focus?.(); }
+
+function showCard(id) {
+  const c = CARD.get(id);
+  if (!c) return;
+  if (!db.cards[id]) { db.cards[id] = keyOf(today()); save(); }
+  const back = CARDS.filter(o => o.r.includes(id) && !c.r.includes(o.id)).map(o => o.id);
+  const chip = cid => { const o = CARD.get(cid); return `<button class="chip ${db.cards[cid] ? 'got' : ''}" style="--h:${hue(o.e)}" data-card="${cid}">${esc(o.t)}</button>`; };
+  const e = ERA.get(c.e);
+  openSheet(`
+    <div class="eraname era-c" style="--h:${e.hue}">${e.name}</div>
+    <h2>${esc(c.t)}</h2>
+    <div class="yl">${esc(c.yl)}</div>
+    <div class="where" style="margin-top:12px">${ribbon([c.e], c.e)}</div>
+    <p class="body">${esc(c.d)}</p>
+    ${c.w ? `<p class="who"><b>関係する人物</b>　${esc(c.w)}</p>` : ''}
+    <h3 class="sec-h">つながる知識</h3>
+    <div class="chips">${[...c.r, ...back].map(chip).join('')}</div>`);
+  if (view === 'zukan') renderZukan();
+}
+
+let reviewId = null, reviewPick = null;
+function showReview(id) {
+  reviewId = id;
+  const q = BY_ID.get(id);
+  const rec = reviewPick === null ? null : { pick: reviewPick };
+  openSheet(`<h2 style="font-size:18px">復習</h2>${questionHTML(q, rec, 'review')}`);
+}
+
+// ---------------------------------------------------------------------------
+// 表示の切りかえ
+// ---------------------------------------------------------------------------
+function render() {
+  $('#today-label').textContent = fmtDay(T0);
+  $('#streak').textContent = streak();
+  document.querySelectorAll('nav.bottom button').forEach(b => b.setAttribute('aria-current', b.dataset.go === view ? 'page' : 'false'));
+  if (view === 'today') renderToday();
+  else if (view === 'zukan') renderZukan();
+  else renderRecord();
+}
+
+function getTheme() { try { return localStorage.getItem(STORE + '-theme') || 'auto'; } catch (e) { return 'auto'; } }
+function applyTheme(t) {
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+}
+applyTheme(getTheme());
+
+let toastTimer;
+function toast(msg) {
+  document.querySelector('.toast')?.remove();
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg; el.setAttribute('role', 'status');
+  document.body.appendChild(el);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.remove(), 2200);
+}
+async function share() {
+  const mark = s => { const r = recOf(day, s); return r ? (r.pick === qOf(day, s).a ? '○' : '×') : '−'; };
+  const text = `れきし日和 ${day.getMonth() + 1}/${day.getDate()}\nやさしい ${mark('easy')}　むずかしい ${mark('hard')}\n連続 ${streak()} 日`;
+  try {
+    if (navigator.share) { await navigator.share({ text }); return; }
+  } catch (e) { if (e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text); toast('結果をコピーしました'); }
+  catch (e) { toast(text.replace(/\n/g, '　')); }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button, .overlay');
+  if (!t) return;
+  if (t.dataset.close && (e.target === t || t.classList.contains('close'))) { closeSheet(); reviewPick = null; return; }
+  if (t.dataset.card) { showCard(t.dataset.card); return; }
+  if (t.dataset.pick !== undefined) {
+    if (t.closest('.sheet')) { reviewPick = Number(t.dataset.pick); if (reviewPick === BY_ID.get(reviewId).a) { db.done[reviewId] = true; save(); } showReview(reviewId); if (view === 'record') renderRecord(); }
+    else answer(Number(t.dataset.pick));
+    return;
+  }
+  if (t.dataset.slot) { slot = t.dataset.slot; newCards = []; render(); return; }
+  if (t.dataset.day) { day = addDays(day, Number(t.dataset.day)); slot = null; newCards = []; render(); return; }
+  if (t.dataset.go) { view = t.dataset.go; newCards = []; render(); window.scrollTo(0, 0); return; }
+  if (t.dataset.review) { reviewPick = null; showReview(t.dataset.review); return; }
+  if (t.dataset.themeSet) { try { localStorage.setItem(STORE + '-theme', t.dataset.themeSet); } catch (err) {} applyTheme(t.dataset.themeSet); renderRecord(); return; }
+  const act = t.dataset.act;
+  if (act === 'other') { slot = slot === 'easy' ? 'hard' : 'easy'; newCards = []; render(); window.scrollTo(0, 0); }
+  else if (act === 'share') share();
+  else if (act === 'reset') $('#reset-area').innerHTML = `<span>本当に消しますか？ 元にはもどせません。</span><button class="btn danger" data-act="reset-yes">消す</button><button class="btn" data-act="reset-no">やめる</button>`;
+  else if (act === 'reset-yes') { db = { days: {}, cards: {}, done: {} }; save(); slot = null; render(); toast('記録を消しました'); }
+  else if (act === 'reset-no') renderRecord();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#overlay-root').innerHTML) { closeSheet(); reviewPick = null; } });
+
+// 日付が変わったら（アプリを開いたまま翌日になったら）読みなおす
+document.addEventListener('visibilitychange', () => { if (!document.hidden && keyOf(today()) !== keyOf(T0)) location.reload(); });
+
+render();
+</script>
+</body>
+</html>
